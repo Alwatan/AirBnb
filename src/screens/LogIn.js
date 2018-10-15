@@ -10,16 +10,21 @@ import colors from "../styles/colors";
 import InputField from "../components/forms/InputField";
 import NextArrowButton from "../components/buttons/NextArrowButton";
 import Notification from "../components/Notification";
+import Loader from "../components/Loader";
 
 class LogIn extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      formValid: false
+      formValid: true,
+      validEmail: false,
+      emailAddress: "",
+      validPassword: false,
+      loadingVisible: false
     };
   }
   render() {
-    const { formValid } = this.state;
+    const { formValid, loadingVisible } = this.state;
     const showNotification = formValid ? false : true;
     const background = formValid ? colors.green01 : colors.darkOrange;
     return (
@@ -37,6 +42,7 @@ class LogIn extends Component {
               borderBottomColor={colors.white}
               inputType="email"
               customStyle={{ marginBottom: 30 }}
+              onChangeText={this.handleEmailChange}
             />
             <InputField
               labelText="PASSWORD"
@@ -46,13 +52,14 @@ class LogIn extends Component {
               borderBottomColor={colors.white}
               inputType="password"
               customStyle={{ marginBottom: 30 }}
+              onChangeText={this.handlePasswordChange}
             />
           </ScrollView>
           <View style={styles.nextButton}>
             <NextArrowButton
               handleNextButton={this.handleNextButton}
               color={background}
-              disabled={false}
+              disabled={this.toggleNextButtonState()}
             />
           </View>
           <View>
@@ -65,16 +72,60 @@ class LogIn extends Component {
             />
           </View>
         </View>
+        <Loader animationType={"fade"} visible={loadingVisible} />
       </KeyboardAvoidingView>
     );
   }
 
   handleNextButton = () => {
-    alert("Next Button pressed");
+    this.setState({ loadingVisible: true });
+    setTimeout(() => {
+      if (
+        this.state.emailAddress === "pugudean@gmail.com" &&
+        this.state.validPassword
+      ) {
+        this.setState({ formValid: true });
+      } else {
+        this.setState({ formValid: false });
+      }
+      this.setState({ loadingVisible: false });
+    }, 2000);
   };
 
   handleCloseNotification = () => {
     this.setState({ formValid: true });
+  };
+
+  handleEmailChange = email => {
+    const emailCheckRegEx = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    this.setState({ emailAddress: email });
+    if (!this.state.validEmail) {
+      if (email.trim().match(emailCheckRegEx)) {
+        this.setState({ validEmail: true });
+      }
+    } else {
+      if (!email.trim().match(emailCheckRegEx)) {
+        this.setState({ validEmail: false });
+      }
+    }
+  };
+
+  handlePasswordChange = password => {
+    if (!this.state.validPassword) {
+      if (password.length > 4) {
+        this.setState({ validPassword: true });
+      }
+    } else if (password.length <= 4) {
+      this.setState({ validPassword: false });
+    }
+  };
+
+  toggleNextButtonState = () => {
+    const { validEmail, validPassword } = this.state;
+    if (validEmail && validPassword) {
+      return false;
+    }
+    return true;
   };
 }
 
